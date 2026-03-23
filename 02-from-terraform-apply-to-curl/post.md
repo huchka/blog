@@ -1,6 +1,6 @@
 # From `terraform apply` to `curl`: Standing Up a GKE Cluster from Scratch
 
-*This is the second post in a series about learning Kubernetes by building FeedForge — an RSS feed aggregator on GKE. These posts are learning notes and progress reports from someone figuring things out in real time. [First post here.](https://medium.com/@huchka/before-writing-a-single-line-of-code-i-spent-a-session-configuring-my-ai-pair-programmer)*
+*This is the second post in a series about learning Kubernetes by building FeedForge — an RSS feed aggregator on GKE. These posts are learning notes and progress reports from someone figuring things out in real time. [First post here.](https://medium.com/@huchka/before-writing-a-single-line-of-code-i-spent-a-session-configuring-my-ai-pair-programmer-c743b0886cc5)*
 
 ---
 
