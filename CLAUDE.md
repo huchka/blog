@@ -33,6 +33,8 @@ blog/
 - Show real problems and debugging, not just the happy path
 - Code snippets should be focused — enough to understand, not full file dumps
 - Each post maps to a FeedForge phase or milestone
+- Every post MUST end with a "Things I Learned" section — personal takeaways, surprises, and lessons from the phase
+- After a PR is merged, tag the merge commit on GitHub (e.g., `phase-2`) and link to it in the post's "What I Built" section so readers can browse the exact code at that point in time
 
 ## Workflow
 
