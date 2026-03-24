@@ -26,7 +26,7 @@ A Deployment treats pods as interchangeable — kill one, spin up another with a
 
 ### Headless Service
 
-A normal ClusterIP Service gets a virtual IP and load-balances traffic. A headless Service (`clusterIP: None`) resolves DNS directly to the pod IP — no load balancer in between. StatefulSets require one, and it gives you per-pod DNS like `postgres-0.postgres.feedforge.svc.cluster.local`.
+A normal ClusterIP Service gets a virtual IP and load-balances traffic. A headless Service (`clusterIP: None`) resolves DNS directly to the pod IP — no virtual IP in between. For a StatefulSet, this is what gives you stable per-pod DNS like `postgres-0.postgres.feedforge.svc.cluster.local`.
 
 ### The subPath Trick
 
@@ -34,7 +34,7 @@ GCE Persistent Disks have a `lost+found` directory at the filesystem root. Postg
 
 ### ConfigMap + Secret Split
 
-Non-sensitive config (DB host, port, name) goes in a ConfigMap. Credentials go in a Secret. The app assembles the connection URL at startup. This way I can change the database host without touching the Secret. Worth noting: K8s Secrets are base64-encoded, not encrypted — they're about RBAC access control, not cryptographic security.
+Non-sensitive config (DB host, port, name) goes in a ConfigMap. Credentials go in a Secret. The app assembles the connection URL at startup. This way I can change the database host without touching the Secret. Worth noting: base64 in a Secret manifest is just encoding, not security. Secrets still rely on access controls, and any at-rest encryption is a separate cluster feature.
 
 ### Init Container for Migrations
 
@@ -42,7 +42,7 @@ The backend pod runs an init container (`alembic upgrade head`) before the main 
 
 ### Liveness vs Readiness Probes
 
-**Readiness**: "Can this pod serve traffic?" Fails → pod is removed from Service, no traffic routed to it. **Liveness**: "Is this pod stuck?" Fails 3 times → kubelet restarts the container. The backend's `/api/health` endpoint does a `SELECT 1` on the database — if it can't reach PostgreSQL, it fails readiness and stops receiving requests.
+**Readiness**: "Can this pod serve traffic?" Fails → pod is removed from the Service endpoints, so no traffic gets routed to it. **Liveness**: "Is this pod stuck?" If it keeps failing past the probe's `failureThreshold` (3 by default), kubelet restarts the container. The backend's `/api/health` endpoint does a `SELECT 1` on the database — if it can't reach PostgreSQL, it fails readiness and stops receiving requests.
 
 Key detail: PostgreSQL's liveness probe has `initialDelaySeconds: 30` because `initdb` takes time on first boot. Too aggressive and you get an infinite crash loop.
 
@@ -76,7 +76,7 @@ My first deploy attempt failed. Then the fix failed. Then that fix failed too. T
 
 **Bug 1**: Docker push returned a cryptic 404. My Terraform variable defaults said `asia-northeast1`, but the actual deploy used `us-central1`. I was pushing to a registry that didn't exist. A quick `gcloud artifacts repositories list` showed the real location. Lesson learned: don't trust defaults in example files — verify your actual infrastructure state.
 
-**Bug 2**: After fixing the region, the init container crash-looped. The logs showed psycopg trying to resolve `ssw0rd2026@postgres.feedforge...` as a hostname. My database password was `P@ssw0rd2026` — the `@` was being interpreted as the user/host delimiter in the connection URL. Fix: `urllib.parse.quote_plus` on credentials before building the URL. This is the kind of bug that works in dev (simple passwords) and breaks in production.
+**Bug 2**: After fixing the region, the init container crash-looped. The logs showed psycopg trying to resolve `ssw0rd2026@postgres.feedforge...` as a hostname. My database password was `P@ssw0rd2026` — the `@` was being interpreted as the user/host delimiter in the connection URL. Fix: URL-encode the username and password components before building the URL, using something like `urllib.parse.quote`. This is the kind of bug that works in dev (simple passwords) and breaks in production.
 
 **Bug 3**: After URL-encoding `@` to `%40`, Alembic crashed with `ValueError: invalid interpolation syntax`. Python's `configparser` treats `%` as its interpolation character, and Alembic's default `env.py` routes the URL through `configparser`. Fix: bypass it entirely and create the SQLAlchemy engine directly from the URL instead of going through `config.set_main_option()`.
 
@@ -93,7 +93,7 @@ kubectl describe pod <pod>              # events, env vars, image pull status
 
 `describe pod` showed me the environment variables were correctly injected. `logs -c run-migrations` showed the actual Python traceback. I learned to go straight to these two commands instead of staring at pod status.
 
-### GCP Project IDs in Manifests Are Fine
+### GCP Project IDs in Manifests Aren't Secrets
 
 The Deployment manifest ended up with the full Artifact Registry path hardcoded:
 
@@ -101,7 +101,7 @@ The Deployment manifest ended up with the full Artifact Registry path hardcoded:
 image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:0.1.2
 ```
 
-I initially worried about committing a GCP project ID to a public repo. Turns out it's not a security concern — project IDs are identifiers, not credentials. Nobody can do anything with it without IAM access. Google's own tutorials show them in public repos.
+I initially worried about committing a GCP project ID to a public repo. The deeper answer: it's usually low sensitivity, not a secret. A project ID is an identifier, not a credential, and it doesn't grant access on its own. The real control point is IAM. That said, it is still metadata about your environment, so I wouldn't treat it as completely meaningless either.
 
 It is a maintainability issue though — the path appears in two places (init container and main container) and breaks if you fork the repo. The clean fix is kustomize's `images` transformer, which I'll set up in Phase 3.
 
@@ -119,7 +119,7 @@ $ curl -X POST http://localhost:8000/api/feeds \
 {"id":"26d6ec46-...","title":"Ars Technica",...}
 ```
 
-Health check confirms database connectivity. Feed CRUD works end-to-end through the full chain: Service → Deployment → PostgreSQL StatefulSet.
+Health check confirms database connectivity. Feed CRUD works end-to-end through the full chain: Service → backend Pod → PostgreSQL Pod, with the Deployment and StatefulSet managing those pods behind the scenes.
 
 ## What's Next
 
