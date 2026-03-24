@@ -36,9 +36,17 @@ blog/
 - Every post MUST end with a "Things I Learned" section — personal takeaways, surprises, and lessons from the phase
 - After a PR is merged, tag the merge commit on GitHub (e.g., `phase-2`) and link to it in the post's "What I Built" section so readers can browse the exact code at that point in time
 
+## Diagrams
+
+- Generate architecture diagrams using Mermaid syntax
+- Write the Mermaid code in a `.mmd` file in the post directory (e.g., `architecture.mmd`)
+- Render to PNG using [mermaid.live](https://mermaid.live) — paste the code, export as PNG
+- Save the PNG in the same directory (e.g., `architecture.png`)
+
 ## Workflow
 
 1. Draft in Markdown in the numbered directory
 2. Review and edit
-3. Publish to Medium
-4. Update the table above with the Medium title
+3. Generate diagrams: write Mermaid code → render at mermaid.live → save PNG
+4. Publish to Medium
+5. Update the table above with the Medium title

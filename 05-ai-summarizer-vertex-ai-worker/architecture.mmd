@@ -1,0 +1,36 @@
+graph LR
+    subgraph GKE Cluster
+        subgraph feedforge namespace
+            direction TB
+
+            subgraph CronJob
+                Fetcher["Feed Fetcher<br/><i>CronJob */15 * * * *</i>"]
+            end
+
+            subgraph Deployment
+                Backend["Backend API<br/><i>FastAPI</i>"]
+                Summarizer["Summarizer Worker<br/><i>BRPOP loop</i>"]
+                Redis["Redis<br/><i>Message Queue</i>"]
+            end
+
+            subgraph StatefulSet
+                Postgres["PostgreSQL<br/><i>Articles + Feeds</i>"]
+            end
+        end
+    end
+
+    RSS["RSS/Atom<br/>Feeds"] -->|fetch| Fetcher
+    Fetcher -->|insert articles| Postgres
+    Fetcher -->|LPUSH article IDs| Redis
+    Redis -->|BRPOP article IDs| Summarizer
+    Summarizer -->|write summary| Postgres
+    Summarizer -->|generate summary| VertexAI["Vertex AI<br/><i>Gemini 2.5 Flash</i>"]
+    Backend -->|read/write| Postgres
+
+    style Fetcher fill:#4a9eff,color:#fff
+    style Summarizer fill:#ff6b6b,color:#fff
+    style Backend fill:#51cf66,color:#fff
+    style Redis fill:#ffd43b,color:#000
+    style Postgres fill:#845ef7,color:#fff
+    style VertexAI fill:#ff922b,color:#fff
+    style RSS fill:#868e96,color:#fff
