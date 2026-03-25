@@ -1,0 +1,28 @@
+graph TB
+    subgraph terraform["Terraform (Infrastructure)"]
+        Policy["google_compute_security_policy<br/><b>feedforge-allow-ip</b><br/><i>default: deny 403</i><br/><i>priority 1000: allow [your IP]</i>"]
+    end
+
+    subgraph k8s["Kubernetes (Wiring)"]
+        BC["BackendConfig<br/><b>feedforge-backend-config</b><br/><i>securityPolicy: feedforge-allow-ip</i>"]
+        SVC1["Service: frontend<br/><i>annotation: backend-config</i>"]
+        SVC2["Service: backend<br/><i>annotation: backend-config</i>"]
+    end
+
+    subgraph gcp["GCP Load Balancer"]
+        BS1["Backend Service<br/><i>frontend</i>"]
+        BS2["Backend Service<br/><i>backend</i>"]
+    end
+
+    Policy -->|"referenced by"| BC
+    BC -->|"applied via annotation"| SVC1
+    BC -->|"applied via annotation"| SVC2
+    SVC1 -->|"configures"| BS1
+    SVC2 -->|"configures"| BS2
+
+    style Policy fill:#51cf66,color:#fff
+    style BC fill:#4a9eff,color:#fff
+    style SVC1 fill:#74c0fc,color:#000
+    style SVC2 fill:#8ce99a,color:#000
+    style BS1 fill:#868e96,color:#fff
+    style BS2 fill:#868e96,color:#fff
