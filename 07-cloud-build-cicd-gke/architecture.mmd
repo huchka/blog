@@ -1,0 +1,50 @@
+graph LR
+    subgraph GitHub
+        Push["Push / Merge<br/><i>to main</i>"]
+    end
+
+    subgraph CB["Cloud Build"]
+        direction TB
+        Trigger["Trigger<br/><i>v2 connection</i>"]
+        Build["Build Images<br/><i>backend + frontend</i>"]
+        Kustomize["kustomize edit set image<br/><i>:$SHORT_SHA</i>"]
+        Apply["kubectl apply -k<br/><i>overlays/dev</i>"]
+        Rollout["rollout status<br/><i>--timeout=120s</i>"]
+        Trigger --> Build --> Kustomize --> Apply --> Rollout
+    end
+
+    subgraph AR["Artifact Registry"]
+        BackendImg["backend:$SHORT_SHA"]
+        FrontendImg["frontend:$SHORT_SHA"]
+    end
+
+    subgraph GKE["GKE Cluster"]
+        subgraph ns["Namespace: feedforge"]
+            direction TB
+            BE["Backend<br/><i>RollingUpdate</i>"]
+            FE["Frontend<br/><i>RollingUpdate</i>"]
+            SUM["Summarizer<br/><i>RollingUpdate</i>"]
+        end
+    end
+
+    Push -->|"webhook"| Trigger
+    Build -->|"push"| BackendImg
+    Build -->|"push"| FrontendImg
+    Apply --> BE
+    Apply --> FE
+    Apply --> SUM
+    BackendImg -.->|"pull"| BE
+    FrontendImg -.->|"pull"| FE
+    BackendImg -.->|"pull"| SUM
+
+    style Push fill:#868e96,color:#fff
+    style Trigger fill:#4a9eff,color:#fff
+    style Build fill:#4a9eff,color:#fff
+    style Kustomize fill:#4a9eff,color:#fff
+    style Apply fill:#4a9eff,color:#fff
+    style Rollout fill:#4a9eff,color:#fff
+    style BackendImg fill:#ffd43b,color:#000
+    style FrontendImg fill:#ffd43b,color:#000
+    style BE fill:#51cf66,color:#fff
+    style FE fill:#51cf66,color:#fff
+    style SUM fill:#51cf66,color:#fff
