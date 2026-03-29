@@ -1,0 +1,79 @@
+graph LR
+    subgraph Internet
+        User["User Browser"]
+        LINE["LINE / Slack"]
+    end
+
+    subgraph GCP["Google Cloud"]
+        CA["Cloud Armor<br/><i>IP Allowlist</i>"]
+        LB["HTTP Load Balancer"]
+
+        subgraph GKE["GKE Cluster"]
+            subgraph ns["Namespace: feedforge"]
+                direction TB
+
+                ING["Ingress<br/><i>path-based routing</i>"]
+
+                subgraph frontend_group["Frontend"]
+                    FE["Frontend<br/><i>React + nginx</i>"]
+                    SVC_FE["Service :8080"]
+                end
+
+                subgraph backend_group["Backend"]
+                    BE["Backend API<br/><i>FastAPI</i>"]
+                    SVC_BE["Service :8000"]
+                    HPA_BE["HPA<br/><i>CPU 70% · 1–3</i>"]
+                end
+
+                subgraph workers["Workers"]
+                    Fetcher["Feed Fetcher<br/><i>CronJob</i>"]
+                    Summarizer["Summarizer<br/><i>BRPOP loop</i>"]
+                    HPA_SUM["HPA<br/><i>CPU 70% · 1–3</i>"]
+                    Digest["Daily Digest<br/><i>CronJob</i>"]
+                    Redis["Redis"]
+                end
+
+                subgraph data["Data"]
+                    Postgres["PostgreSQL"]
+                end
+            end
+        end
+
+        VertexAI["Vertex AI<br/><i>Gemini 2.5 Flash</i>"]
+    end
+
+    User -->|"HTTP request"| CA
+    CA -->|"allowed"| LB
+    LB -->|"/"| ING
+    ING -->|"/api/*"| SVC_BE
+    ING -->|"/*"| SVC_FE
+    SVC_FE --> FE
+    SVC_BE --> BE
+    HPA_BE -.->|"scale"| BE
+    BE -->|read/write| Postgres
+    Fetcher -->|insert| Postgres
+    Fetcher -->|LPUSH| Redis
+    Redis -->|BRPOP| Summarizer
+    HPA_SUM -.->|"scale"| Summarizer
+    Summarizer -->|write summary| Postgres
+    Summarizer -->|generate| VertexAI
+    Digest -->|query| Postgres
+    Digest -->|notify| LINE
+
+    style CA fill:#ff6b6b,color:#fff
+    style LB fill:#868e96,color:#fff
+    style ING fill:#868e96,color:#fff
+    style FE fill:#4a9eff,color:#fff
+    style BE fill:#51cf66,color:#fff
+    style SVC_FE fill:#74c0fc,color:#000
+    style SVC_BE fill:#8ce99a,color:#000
+    style Fetcher fill:#ffd43b,color:#000
+    style Summarizer fill:#ff922b,color:#fff
+    style Redis fill:#ffd43b,color:#000
+    style Postgres fill:#845ef7,color:#fff
+    style VertexAI fill:#ff922b,color:#fff
+    style User fill:#dee2e6,color:#000
+    style HPA_BE fill:#20c997,color:#fff
+    style HPA_SUM fill:#20c997,color:#fff
+    style Digest fill:#e599f7,color:#000
+    style LINE fill:#06d6a0,color:#fff
