@@ -40,13 +40,15 @@ blog/
 
 - Generate architecture diagrams using Mermaid syntax
 - Write the Mermaid code in a `.mmd` file in the post directory (e.g., `architecture.mmd`)
-- Render to PNG using [mermaid.live](https://mermaid.live) — paste the code, export as PNG
+- Render to PNG automatically by visiting [mermaid.live](https://mermaid.live) via browser tools — paste the Mermaid code, export as PNG, and save to the post directory
 - Save the PNG in the same directory (e.g., `architecture.png`)
+- **Always include rendered PNGs in git commits** — the `.mmd` source alone is not enough since Medium needs the image files
 
 ## Workflow
 
 1. Draft in Markdown in the numbered directory
 2. Review and edit
-3. Generate diagrams: write Mermaid code → render at mermaid.live → save PNG
-4. Publish to Medium
-5. Update the table above with the Medium title
+3. Generate diagrams: write Mermaid code → render at mermaid.live via browser → save PNG to post directory
+4. Commit all files including PNGs (post.md, .mmd, .png, screenshots) to git
+5. Publish to Medium
+6. Update the table above with the Medium title
