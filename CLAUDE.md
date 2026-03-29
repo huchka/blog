@@ -24,6 +24,7 @@ blog/
 | 01 | `01-setting-up-claude-code-for-kubernetes-learning` | Before Writing a Single Line of Code, I Spent a Session Configuring My AI Pair Programmer |
 | 02 | `02-from-terraform-apply-to-curl` | From `terraform apply` to `curl`: Standing Up a GKE Cluster from Scratch |
 | 03 | `03-deploying-fastapi-to-gke` | Deploying a FastAPI App to GKE: What I Actually Learned About Kubernetes |
+| 09 | `09-networkpolicy-securitycontext-hardening` | I Thought Adding Security to My K8s Cluster Would Be Simple YAML. I Was Wrong. |
 
 ## Writing Conventions
 
