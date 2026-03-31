@@ -36,6 +36,7 @@ blog/
 - Each post maps to a FeedForge phase or milestone
 - Every post MUST end with a "Things I Learned" section — personal takeaways, surprises, and lessons from the phase
 - After a PR is merged, tag the merge commit on GitHub (e.g., `phase-2`) and link to it in the post's "What I Built" section so readers can browse the exact code at that point in time
+- **Always include images referenced in the post in the same commit** — don't commit post.md without its images
 
 ## Diagrams
 
