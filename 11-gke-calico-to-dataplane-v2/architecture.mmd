@@ -1,0 +1,45 @@
+---
+title: "Per-Node CPU Requests: Calico vs Dataplane V2 (e2-medium, ~940m allocatable)"
+---
+flowchart LR
+  subgraph before["Before: Calico"]
+    direction TB
+    subgraph calico_specific["Calico Stack (~300m)"]
+      C1["calico-node"]
+      C2["calico-typha"]
+      C3["typha-autoscalers"]
+    end
+    subgraph shared1["GKE System Pods (~550m)"]
+      S1["fluentbit-gke"]
+      S2["gke-metrics-agent"]
+      S3["kube-proxy"]
+      S4["konnectivity-agent"]
+      S5["node-local-dns"]
+      S6["pdcsi-node + ip-masq"]
+    end
+    W1["Workloads: ~90m remaining\n= 1 small pod per node"]
+  end
+
+  subgraph after["After: Dataplane V2"]
+    direction TB
+    subgraph dpv2_specific["DPv2 Stack (~200m)"]
+      D1["anetd"]
+      D2["netd"]
+    end
+    subgraph shared2["GKE System Pods (~550m)"]
+      S7["fluentbit-gke"]
+      S8["gke-metrics-agent"]
+      S9["kube-proxy"]
+      S10["konnectivity-agent"]
+      S11["node-local-dns"]
+      S12["pdcsi-node + ip-masq"]
+    end
+    W2["Workloads: ~140m remaining"]
+  end
+
+  before -->|"cluster recreation\n(terraform apply)"| after
+
+  style calico_specific fill:#e74c3c,color:#fff
+  style dpv2_specific fill:#27ae60,color:#fff
+  style W1 fill:#e8a0a0,color:#000
+  style W2 fill:#a0d4a0,color:#000
