@@ -1,0 +1,33 @@
+flowchart LR
+    subgraph CronJobs
+        F["Feed Fetcher<br/>(CronJob)"]
+        D["Daily Digest<br/>(CronJob)"]
+    end
+
+    subgraph Data
+        PG[(PostgreSQL)]
+        R[(Redis Queue)]
+    end
+
+    subgraph Worker
+        S["Summarizer<br/>(Deployment)"]
+    end
+
+    subgraph External
+        RSS["RSS Feeds"]
+        G["Vertex AI<br/>(Gemini)"]
+        L["LINE API"]
+    end
+
+    RSS -->|fetch| F
+    F -->|insert article| PG
+    F -->|LPUSH article ID| R
+    R -->|BRPOP| S
+    S -->|generate_content| G
+    G -.->|"403 Forbidden &#10060;"| S
+    S -->|write summary| PG
+    PG -->|query summaries| D
+    D -->|send digest| L
+
+    style G fill:#ff6b6b,stroke:#c0392b,color:#fff
+    style S fill:#ffeaa7,stroke:#fdcb6e,color:#333

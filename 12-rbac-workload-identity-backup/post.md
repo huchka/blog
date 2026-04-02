@@ -235,6 +235,43 @@ This is a Job, not a CronJob — it sits as a template and runs when triggered m
 kubectl create job db-backup-test --from=job/db-backup -n feedforge
 ```
 
+## The NetworkPolicy Blind Spot
+
+The backup Job ran, uploaded a file to GCS, and reported success. I moved on. Then I looked at the actual backup file — and realized something was wrong.
+
+Back in post #9, I'd added a NetworkPolicy on PostgreSQL that only allows ingress from `backend`, `summarizer`, `feed-fetcher`, and `daily-digest`. The backup Job's pods have label `app.kubernetes.io/name: db-backup` — which isn't in that allow list.
+
+The `pg_dump` connection had timed out:
+
+```
+pg_dump: error: connection to server at "postgres" (10.1.0.14), port 5432 failed: Operation timed out
+	Is the server running on that host and accepting TCP/IP connections?
+```
+
+But the script still printed "Backup uploaded" and the Job completed successfully. I'd uploaded an empty gzip file to GCS. The fix was two things.
+
+First, `db-backup` needed to be in the postgres NetworkPolicy:
+
+```yaml
+ingress:
+  - from:
+      # ... existing entries ...
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: db-backup
+    ports:
+      - protocol: TCP
+        port: 5432
+```
+
+Second, the script used `set -e`, which should fail on errors — but it doesn't catch failures in pipes. `pg_dump | gzip` only checks the exit code of the last command (`gzip`), which succeeds even when `pg_dump` fails because `gzip` happily compresses an empty input. The fix:
+
+```bash
+set -eo pipefail
+```
+
+`pipefail` makes the pipe return the exit code of the first command that fails. With both fixes, a failed `pg_dump` actually fails the Job instead of silently uploading garbage.
+
 ## Environment Portability with Kustomize
 
 The Workload Identity annotation includes the full GCP service account email, which contains the project ID:
@@ -276,6 +313,10 @@ When module A creates something that module B references, but module B depends o
 ### The Metadata Server at 169.254.169.254 Is the Bridge
 
 The GKE metadata server is the runtime mechanism that makes Workload Identity work. You can curl it directly — `wget -O- --header="Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token` — and get back a short-lived GCP access token scoped to your pod's mapped GCP SA. Client libraries like `gsutil` do this automatically, but understanding the raw flow helps debug issues and works in minimal images that don't have GCP SDKs.
+
+### New Workloads Need NetworkPolicy Updates
+
+This one was obvious in hindsight. I'd locked down postgres ingress in post #9 with an explicit allow list — then added a new workload that needs postgres and forgot to update the list. The dangerous part was that the failure was silent: `pg_dump` timed out, but the pipe masked it and the Job reported success. Any time you add a workload that talks to a NetworkPolicy-protected service, check the policy. And always use `set -eo pipefail` in shell scripts that use pipes — `set -e` alone doesn't catch failures in piped commands.
 
 ### Choose an Image That Already Has What You Need
 
