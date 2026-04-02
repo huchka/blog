@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant Pod as Pod (db-backup)
+    participant MDS as GKE Metadata Server<br/>169.254.169.254
+    participant STS as GCP Security<br/>Token Service
+    participant IAM as GCP IAM
+    participant GCS as Cloud Storage
+
+    Note over Pod: pg_dump completes,<br/>needs to upload to GCS
+
+    Pod->>MDS: GET /computeMetadata/v1/<br/>instance/service-accounts/<br/>default/token
+
+    Note over MDS: Checks pod's K8s SA: db-backup<br/>Reads annotation:<br/>iam.gke.io/gcp-service-account
+
+    MDS->>STS: Exchange K8s identity<br/>project.svc.id.goog<br/>[feedforge/db-backup]
+
+    STS->>IAM: Does feedforge-db-backup<br/>allow this K8s SA?
+
+    Note over IAM: roles/iam.workloadIdentityUser<br/>granted to<br/>project.svc.id.goog<br/>[feedforge/db-backup]
+
+    IAM-->>STS: Authorized
+
+    STS-->>MDS: Short-lived GCP access token<br/>scoped to feedforge-db-backup
+
+    MDS-->>Pod: {"access_token": "ya29.xxx..."}
+
+    Pod->>GCS: PUT /upload/storage/v1/b/bucket/o<br/>Authorization: Bearer ya29.xxx...
+
+    Note over GCS: feedforge-db-backup has<br/>storage.objectCreator<br/>on this bucket
+
+    GCS-->>Pod: 200 OK
+
+    Note over Pod: Backup uploaded
