@@ -1,0 +1,14 @@
+flowchart TB
+    subgraph "The Deadlock"
+        SURGE["Surge Upgrade<br/>Creates new node,<br/>cordons old node"]
+        PDB["PodDisruptionBudget<br/>minAvailable: 1<br/>Blocks eviction — only 1 replica running"]
+        HPA["HorizontalPodAutoscaler<br/>CPU at ~5%, target 70%<br/>No scale-up needed"]
+    end
+
+    SURGE -->|"Tries to drain<br/>old node"| PDB
+    PDB -->|"Needs 2nd replica<br/>before eviction"| HPA
+    HPA -->|"No load, won't<br/>create 2nd replica"| SURGE
+
+    style SURGE fill:#e74c3c,color:#fff
+    style PDB fill:#f39c12,color:#fff
+    style HPA fill:#3498db,color:#fff

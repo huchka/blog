@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant GKE as GKE Upgrade Controller
+    participant NodeA as Node A (old, cordoned)
+    participant NodeB as Node B (new, surge)
+    participant PDB as PDB Check
+    participant HPA as HPA Check
+
+    GKE->>NodeB: Create surge node (e2-standard-2)
+    NodeB-->>GKE: Node Ready
+    GKE->>NodeA: Cordon (SchedulingDisabled)
+    GKE->>PDB: Can I evict summarizer?
+    PDB->>PDB: minAvailable: 1, running: 1
+    PDB-->>GKE: BLOCKED (would drop to 0)
+    GKE->>HPA: Any new replicas coming?
+    HPA->>HPA: CPU 5% < 70% target
+    HPA-->>GKE: No scale-up
+    Note over GKE,HPA: Stuck. Repeats every 10s.<br/>Node drain timeout eventually.
