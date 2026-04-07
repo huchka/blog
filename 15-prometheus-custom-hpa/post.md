@@ -1,4 +1,4 @@
-# CPU-Based Autoscaling Was Wrong for My Queue Worker. Here's How I Switched to Custom Metrics.
+# Phase 6b - CPU-Based Autoscaling Was Wrong for My Queue Worker. Here's How I Switched to Custom Metrics.
 
 *This is the fifteenth post in a series about learning Kubernetes by building FeedForge — an RSS feed aggregator with AI summarization on GKE. These posts are learning notes from someone figuring things out in real time. [Previous post here.](https://medium.com/@huchka)*
 
