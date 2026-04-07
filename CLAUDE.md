@@ -42,7 +42,10 @@ blog/
 
 - Generate architecture diagrams using Mermaid syntax
 - Write the Mermaid code in a `.mmd` file in the post directory (e.g., `architecture.mmd`)
-- Render to PNG automatically by visiting [mermaid.live](https://mermaid.live) via browser tools — paste the Mermaid code, export as PNG, and save to the post directory
+- Render to PNG using mermaid-cli (`/opt/homebrew/bin/mmdc`):
+  ```bash
+  mmdc -i <post-directory>/diagram.mmd -o <post-directory>/diagram.png -b transparent
+  ```
 - Save the PNG in the same directory (e.g., `architecture.png`)
 - **Always include rendered PNGs in git commits** — the `.mmd` source alone is not enough since Medium needs the image files
 
@@ -50,7 +53,21 @@ blog/
 
 1. Draft in Markdown in the numbered directory
 2. Review and edit
-3. Generate diagrams: write Mermaid code → render at mermaid.live via browser → save PNG to post directory
-4. Commit all files including PNGs (post.md, .mmd, .png, screenshots) to git
-5. Publish to Medium
-6. Update the table above with the Medium title
+3. Generate diagrams: write Mermaid code → render with `mmdc -i input.mmd -o output.png -b transparent`
+4. Run Codex review and auto-apply fixes (see below)
+5. Commit all files including PNGs (post.md, .mmd, .png, screenshots) to git
+6. Publish to Medium
+7. Update the table above with the Medium title
+
+## Codex Review Automation
+
+After drafting a blog post, run a Codex CLI review and apply fixes automatically:
+
+1. Run the review non-interactively:
+   ```bash
+   codex exec -o /tmp/codex-review.md "Review this blog post draft for technical accuracy, clarity, and readability. Flag any factual errors, unclear explanations, or improvements. Be specific about line-level issues. File: <post-directory>/post.md"
+   ```
+2. Read the review output and assess each finding
+3. **Auto-apply** fixes that are clearly correct (factual errors, misleading explanations, terminology mistakes, readability improvements)
+4. **Ask the user** only when the fix involves a subjective judgment call, a major structural change, or when you're unsure whether the review finding is valid
+5. After applying, summarize what was changed and why

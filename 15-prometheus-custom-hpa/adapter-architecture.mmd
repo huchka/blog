@@ -1,0 +1,14 @@
+graph LR
+    HPA[HPA Controller] -->|"GET external.metrics.k8s.io<br/>feedforge_queue_length"| API[K8s API Server]
+    API -->|delegates via<br/>APIService| PA[Prometheus<br/>Adapter]
+    PA -->|PromQL query| P[Prometheus]
+    P -->|"scrape /metrics<br/>every 15s"| B[Backend<br/>:8000]
+    B -->|LLEN| R[(Redis<br/>Queue)]
+
+    PA -.->|"value: 35"| API
+    API -.->|"35 / 20 = 2 replicas"| HPA
+
+    style HPA fill:#3498db,color:#fff
+    style PA fill:#e67e22,color:#fff
+    style P fill:#e74c3c,color:#fff
+    style R fill:#2ecc71,color:#fff

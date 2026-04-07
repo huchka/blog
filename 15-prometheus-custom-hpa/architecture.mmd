@@ -1,0 +1,29 @@
+graph LR
+    subgraph CronJob
+        F[Feed Fetcher]
+    end
+
+    subgraph "Redis"
+        Q[articles:pending<br/>queue]
+    end
+
+    subgraph "Deployment (HPA)"
+        S1[Summarizer 1]
+        S2[Summarizer 2]
+    end
+
+    subgraph PostgreSQL
+        DB[(Articles)]
+    end
+
+    RSS[RSS Feeds] --> F
+    F -->|lpush article IDs| Q
+    Q -->|brpop| S1
+    Q -->|brpop| S2
+    S1 -->|write summary| DB
+    S2 -->|write summary| DB
+    S1 -.->|Gemini API| LLM((Vertex AI))
+    S2 -.->|Gemini API| LLM
+
+    style Q fill:#e74c3c,color:#fff
+    style S2 fill:#f39c12,stroke-dasharray: 5 5
