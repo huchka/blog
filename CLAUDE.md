@@ -44,7 +44,7 @@ blog/
 - Write the Mermaid code in a `.mmd` file in the post directory (e.g., `architecture.mmd`)
 - Render to PNG using mermaid-cli (`/opt/homebrew/bin/mmdc`):
   ```bash
-  mmdc -i <post-directory>/diagram.mmd -o <post-directory>/diagram.png -b transparent
+  mmdc -i <post-directory>/diagram.mmd -o <post-directory>/diagram.png -b transparent -s 2
   ```
 - Save the PNG in the same directory (e.g., `architecture.png`)
 - **Always include rendered PNGs in git commits** — the `.mmd` source alone is not enough since Medium needs the image files
@@ -53,7 +53,7 @@ blog/
 
 1. Draft in Markdown in the numbered directory
 2. Review and edit
-3. Generate diagrams: write Mermaid code → render with `mmdc -i input.mmd -o output.png -b transparent`
+3. Generate diagrams: write Mermaid code → render with `mmdc -i input.mmd -o output.png -b transparent -s 2`
 4. Run Codex review and auto-apply fixes (see below)
 5. Commit all files including PNGs (post.md, .mmd, .png, screenshots) to git
 6. Publish to Medium

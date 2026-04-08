@@ -1,0 +1,52 @@
+graph TD
+    subgraph Kubernetes Resources
+        GW["Gateway<br/><i>gke-l7-global-external-managed</i>"]
+        HR["HTTPRoute<br/><i>/api → backend, / → frontend</i>"]
+        BP["GCPBackendPolicy<br/><i>Cloud Armor policy</i>"]
+        SVC1["Service: backend"]
+        SVC2["Service: frontend"]
+    end
+
+    subgraph GCP Resources
+        FR["Forwarding Rule<br/><i>External IP + port 80</i>"]
+        TP["Target HTTP Proxy"]
+        UM["URL Map<br/><i>path rules</i>"]
+        BS1["Backend Service<br/><i>backend</i>"]
+        BS2["Backend Service<br/><i>frontend</i>"]
+        HC1["Health Check<br/><i>/api/health</i>"]
+        HC2["Health Check<br/><i>/</i>"]
+        NEG1["Zonal NEG<br/><i>backend pod IPs</i>"]
+        NEG2["Zonal NEG<br/><i>frontend pod IPs</i>"]
+        CA["Cloud Armor Policy<br/><i>feedforge-allow-ip</i>"]
+    end
+
+    GW --> FR
+    GW --> TP
+    HR --> UM
+    UM --> BS1
+    UM --> BS2
+    BS1 --> HC1
+    BS2 --> HC2
+    BS1 --> NEG1
+    BS2 --> NEG2
+    BP --> CA
+    CA --> BS1
+    CA --> BS2
+    SVC1 --> NEG1
+    SVC2 --> NEG2
+
+    style GW fill:#4a9eff,color:#fff
+    style HR fill:#4a9eff,color:#fff
+    style BP fill:#4a9eff,color:#fff
+    style SVC1 fill:#4a9eff,color:#fff
+    style SVC2 fill:#4a9eff,color:#fff
+    style FR fill:#34a853,color:#fff
+    style TP fill:#34a853,color:#fff
+    style UM fill:#34a853,color:#fff
+    style BS1 fill:#34a853,color:#fff
+    style BS2 fill:#34a853,color:#fff
+    style HC1 fill:#34a853,color:#fff
+    style HC2 fill:#34a853,color:#fff
+    style NEG1 fill:#34a853,color:#fff
+    style NEG2 fill:#34a853,color:#fff
+    style CA fill:#ea4335,color:#fff
