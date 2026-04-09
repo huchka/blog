@@ -1,4 +1,4 @@
-# I Moved My Database Out of Kubernetes. Here's What Broke Along the Way.
+# Phase 7b - I Moved My Database Out of Kubernetes. Here's What Broke Along the Way.
 
 *This is the seventeenth post in a series about learning Kubernetes by building FeedForge — an RSS feed aggregator with AI summarization on GKE. These posts are learning notes from someone figuring things out in real time. [Previous post here.](https://medium.com/@huchka)*
 
@@ -13,7 +13,7 @@ Before writing any code this session, I had a list of things on my mind. Not tas
 - Should I switch from Cloud Build to GitHub Actions?
 - Where is my Postgres data actually stored right now?
 
-I didn't have answers for any of them. So I started there.
+I didn't have full answers for any of them. So I started there.
 
 ## The Questions Before the Code
 
