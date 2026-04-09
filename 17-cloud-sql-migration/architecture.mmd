@@ -1,0 +1,44 @@
+graph LR
+    subgraph GKE Cluster
+        subgraph Backend Pod
+            B[Backend App<br/>localhost:5432]
+            BP[Cloud SQL<br/>Auth Proxy]
+        end
+        subgraph Summarizer Pod
+            S[Summarizer]
+            SP[Cloud SQL<br/>Auth Proxy]
+        end
+        subgraph Fetcher Pod
+            F[Feed Fetcher]
+            FP[Cloud SQL<br/>Auth Proxy]
+        end
+        subgraph Digest Pod
+            D[Daily Digest]
+            DP[Cloud SQL<br/>Auth Proxy]
+        end
+    end
+
+    subgraph Google Cloud
+        WI[Workload Identity]
+        CS[(Cloud SQL<br/>Postgres 16)]
+    end
+
+    B --> BP
+    S --> SP
+    F --> FP
+    D --> DP
+    BP -->|Private IP<br/>VPC Peering| CS
+    SP -->|Private IP<br/>VPC Peering| CS
+    FP -->|Private IP<br/>VPC Peering| CS
+    DP -->|Private IP<br/>VPC Peering| CS
+    BP -.->|IAM Auth| WI
+    SP -.->|IAM Auth| WI
+    FP -.->|IAM Auth| WI
+    DP -.->|IAM Auth| WI
+
+    style CS fill:#4285F4,color:#fff
+    style WI fill:#34A853,color:#fff
+    style BP fill:#FBBC04,color:#000
+    style SP fill:#FBBC04,color:#000
+    style FP fill:#FBBC04,color:#000
+    style DP fill:#FBBC04,color:#000
