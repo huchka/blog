@@ -1,0 +1,27 @@
+graph TB
+    subgraph Control Plane
+        cp1[cp1<br/>192.168.2.8<br/>apiserver + etcd]
+        cp2[cp2<br/>192.168.2.9<br/>apiserver + etcd]
+        cp3[cp3<br/>192.168.2.10<br/>apiserver + etcd]
+    end
+
+    subgraph Workers
+        w1[worker1<br/>192.168.2.11<br/>kubelet + kube-proxy]
+        w2[worker2<br/>192.168.2.12<br/>kubelet + kube-proxy]
+        w3[worker3<br/>192.168.2.13<br/>kubelet + kube-proxy]
+    end
+
+    cp1 <-->|etcd replication| cp2
+    cp2 <-->|etcd replication| cp3
+    cp1 <-->|etcd replication| cp3
+
+    w1 -->|kubeadm join| cp1
+    w2 -->|kubeadm join| cp1
+    w3 -->|kubeadm join| cp1
+
+    style cp1 fill:#4a90d9,stroke:#2c5f8a,color:#fff
+    style cp2 fill:#4a90d9,stroke:#2c5f8a,color:#fff
+    style cp3 fill:#4a90d9,stroke:#2c5f8a,color:#fff
+    style w1 fill:#7ab648,stroke:#4a7a2e,color:#fff
+    style w2 fill:#7ab648,stroke:#4a7a2e,color:#fff
+    style w3 fill:#7ab648,stroke:#4a7a2e,color:#fff
