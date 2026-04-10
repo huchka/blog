@@ -1,0 +1,31 @@
+graph TB
+    subgraph node["Kubernetes Node"]
+        subgraph kernel["Linux Kernel"]
+            overlay["overlay module<br/><i>OverlayFS for container image layers</i>"]
+            br_netfilter["br_netfilter module<br/><i>Bridge traffic visible to iptables</i>"]
+            sysctl["sysctl params<br/><i>bridge-nf-call-iptables = 1</i><br/><i>ip_forward = 1</i>"]
+            iptables["iptables rules<br/><i>Service routing (ClusterIP, NodePort)</i>"]
+            br_netfilter --> sysctl
+            sysctl --> iptables
+        end
+
+        subgraph runtime["Container Runtime"]
+            containerd["containerd<br/><i>CRI: pull images, run containers</i>"]
+            runc["runc<br/><i>OCI runtime, SystemdCgroup = true</i>"]
+            containerd --> runc
+            runc --> overlay
+        end
+
+        subgraph k8s["Kubernetes"]
+            kubelet["kubelet<br/><i>Node agent, pod lifecycle</i>"]
+            kube_proxy["kube-proxy<br/><i>Programs iptables for Services</i>"]
+            kubelet -->|CRI| containerd
+            kubelet -->|cgroup driver must match| runc
+            kube_proxy --> iptables
+        end
+    end
+
+    style kernel fill:#f0f4ff,stroke:#4a6fa5
+    style runtime fill:#fff4e6,stroke:#c98a2e
+    style k8s fill:#e8f5e9,stroke:#4caf50
+    style node fill:#fafafa,stroke:#333
