@@ -1,4 +1,4 @@
-# I've Been Using Managed Kubernetes. Now I'm Building It from Scratch.
+# K8s from Scratch #0: I've Been Using Managed Kubernetes. Now I'm Building It by Hand.
 
 *I've spent the last 17 posts learning Kubernetes by building [FeedForge on GKE](https://medium.com/@huchka) — deploying apps, configuring networking, setting up monitoring, fighting with YAML. Along the way I kept hitting the same feeling: I understand how to use Kubernetes, but I don't really understand how it works underneath. This is the start of a new mini-series where I find out.*
 
@@ -60,6 +60,8 @@ Why?
 **Because it forces structure on learning.** Without issues and phases, "learn Kubernetes" is an amorphous blob. With a plan broken into 7 phases, 27 issues, and concrete acceptance criteria, every session has a clear goal. I know what "done" looks like before I start.
 
 **Because it creates a record.** Six months from now, I can look at the project board, the PRs, and the commit history and reconstruct exactly how I learned each concept. That's more useful than scattered notes.
+
+**Because I want to figure out how AI development actually fits into a real workflow.** There's a lot of hype around AI-assisted coding right now — Claude Code, Devin, Cursor, Copilot — but most examples are either toy demos or "watch the AI build an entire app." I want to test something different: what happens when you give AI tools a structured SDLC to work within? Where does AI help most — design, implementation, review, all of it? Where does it get in the way? Having a real process with issues, branches, and PRs gives me a framework to experiment with different AI development approaches and actually compare them. The SDLC isn't just for the Kubernetes learning — it's the control variable for the AI experiment.
 
 The workflow I'm using:
 

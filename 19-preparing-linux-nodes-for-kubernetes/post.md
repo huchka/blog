@@ -1,4 +1,4 @@
-# Every kubeadm Tutorial Lists These 5 Steps. Here's What They Actually Do.
+# K8s from Scratch #1: Every kubeadm Tutorial Lists These 5 Steps. Here's What They Actually Do.
 
 *This is the second post in a mini-series about building Kubernetes from scratch on local VMs. [Previous post: why I'm doing this, the setup, and the full plan.](TODO) These are learning notes from someone pulling the curtain back on what managed K8s does for you.*
 
