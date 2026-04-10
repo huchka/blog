@@ -1,0 +1,40 @@
+sequenceDiagram
+    participant A as Ansible (host)
+    participant CP as cp1 (control plane)
+    participant K as kubelet
+    participant API as kube-apiserver
+    participant Op as Tigera Operator
+    participant Cal as calico-node
+
+    rect rgb(240, 248, 255)
+    Note over A,CP: Phase 2 — Ansible Setup
+    A->>CP: ansible all -m ping
+    CP-->>A: pong (SSH verified)
+    end
+
+    rect rgb(245, 255, 245)
+    Note over A,Cal: Phase 3 — Control Plane Bootstrap
+    A->>CP: kubeadm init --pod-network-cidr=192.168.0.0/16
+    CP->>CP: Generate certs, write static pod manifests
+    CP->>K: kubelet detects manifests in /etc/kubernetes/manifests/
+    K->>K: Start etcd, apiserver, scheduler, controller-manager
+    K->>API: Register node (NotReady — no CNI)
+    API-->>A: kubeadm init complete
+    A->>CP: Copy admin.conf → ~/.kube/config
+    A->>CP: kubeadm token create --print-join-command
+    CP-->>A: Save join command locally
+    end
+
+    rect rgb(255, 245, 238)
+    Note over A,Cal: Phase 4 — Calico CNI
+    A->>API: kubectl create tigera-operator.yaml
+    API->>Op: Operator pod starts
+    Op->>API: Register CRDs (Installation, etc.)
+    A->>API: kubectl create custom-resources.yaml
+    API->>Op: Installation CR detected
+    Op->>Cal: Deploy calico-node DaemonSet
+    Cal->>K: Assign pod CIDR to node
+    K->>API: Update node status → Ready
+    API->>API: Schedule CoreDNS pods
+    Note over CP: cp1 is Ready, all system pods Running
+    end
