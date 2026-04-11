@@ -1,0 +1,40 @@
+graph TB
+    CLIENT["fa:fa-laptop macOS host — kubectl"] -->|"kubeconfig:<br/>192.168.2.100:8443"| VIP
+
+    VIP["fa:fa-globe VIP: 192.168.2.100<br/><i>Floating IP managed by keepalived</i>"]
+
+    VIP -->|"lands on current<br/>VRRP master"| HA_LB
+
+    HA_LB["fa:fa-random HAProxy :8443<br/><i>on VIP-holding node</i>"]
+
+    HA_LB -->|roundrobin| API1["cp1 — apiserver :6443"]
+    HA_LB -->|roundrobin| API2["cp2 — apiserver :6443"]
+    HA_LB -->|roundrobin| API3["cp3 — apiserver :6443"]
+
+    API1 --- ETCD1["etcd"]
+    API2 --- ETCD2["etcd"]
+    API3 --- ETCD3["etcd"]
+
+    ETCD1 <-->|"peer"| ETCD2
+    ETCD2 <-->|"peer"| ETCD3
+    ETCD1 <-->|"peer"| ETCD3
+
+    subgraph KA["keepalived VRRP election"]
+        direction LR
+        K1["cp1<br/>priority: 101"]
+        K2["cp2<br/>priority: 100"]
+        K3["cp3<br/>priority: 99"]
+    end
+
+    K1 -.->|"health check fails<br/>→ priority drops to 51"| VIP
+
+    WORKERS["fa:fa-server Workers<br/>worker1, worker2, worker3"] -->|"kubelet → VIP:8443"| VIP
+
+    style VIP fill:#ff9800,stroke:#e65100,color:#000,font-weight:bold
+    style HA_LB fill:#42a5f5,stroke:#1565c0,color:#fff
+    style CLIENT fill:#f3e5f5,stroke:#6a1b9a
+    style WORKERS fill:#e8f5e9,stroke:#2e7d32
+    style KA fill:#fff3e0,stroke:#e65100
+    style K1 fill:#fff,stroke:#333
+    style K2 fill:#fff,stroke:#333
+    style K3 fill:#fff,stroke:#333
