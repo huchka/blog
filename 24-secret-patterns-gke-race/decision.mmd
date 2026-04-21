@@ -1,0 +1,23 @@
+flowchart TD
+    Start["Need to get a secret<br/>into your pod on GKE"]
+    Start --> Q1{"Is this a throwaway<br/>learning cluster?"}
+    Q1 -->|Yes| P1["Pattern 1:<br/>kubectl create secret<br/>+ envFrom"]
+    Q1 -->|No| Q2{"Can you change<br/>app code?"}
+
+    Q2 -->|No — legacy app<br/>reads env vars| P2["Pattern 2:<br/>CSI + secretObjects<br/>+ envFrom"]
+    Q2 -->|Yes| Q3{"Do you need hot<br/>rotation without<br/>pod restart?"}
+
+    Q3 -->|No| P3["Pattern 3:<br/>CSI + read file<br/>once at startup"]
+    Q3 -->|Yes| P4["Pattern 4:<br/>CSI + read file<br/>per auth attempt"]
+
+    P1 -.->|"No rotation,<br/>broad RBAC exposure"| Caveat1["⚠️  Dev only"]
+    P2 -.->|"Cold-start race,<br/>no rotation"| Caveat2["⚠️  Crashloop<br/>noise"]
+    P3 -.->|"Race-free,<br/>rolling restart to rotate"| Caveat3["✅ Pragmatic<br/>default"]
+    P4 -.->|"Race-free,<br/>hot rotation"| Caveat4["✅ Most<br/>robust"]
+
+    classDef goodOption fill:#d4edda,stroke:#155724
+    classDef cautionOption fill:#fff3cd,stroke:#856404
+    classDef devOption fill:#f8d7da,stroke:#721c24
+    class P1 devOption
+    class P2 cautionOption
+    class P3,P4 goodOption

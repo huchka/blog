@@ -1,0 +1,35 @@
+flowchart LR
+    subgraph Pod["Pod (feedforge/backend)"]
+        direction TB
+        App["App container"]
+        File["/mnt/secrets/postgres/<br/>POSTGRES_PASSWORD"]
+        App -.reads.-> File
+    end
+
+    subgraph KSA["Kubernetes Service Account"]
+        direction TB
+        KSA_obj["feedforge/backend KSA<br/>annotation: iam.gke.io/gcp-service-account"]
+    end
+
+    subgraph GSA["GCP Service Account"]
+        direction TB
+        GSA_obj["feedforge-cloudsql-proxy GSA"]
+    end
+
+    subgraph SM["GCP Secret Manager"]
+        direction TB
+        Secret["feedforge-postgres-password<br/>versions/latest"]
+    end
+
+    subgraph CSI["Secrets Store CSI Driver"]
+        direction TB
+        Driver["DaemonSet (per node)"]
+        SPC["SecretProviderClass<br/>postgres-credentials"]
+        Driver --- SPC
+    end
+
+    Pod -->|"1 uses KSA"| KSA
+    KSA -->|"2 impersonates GSA<br/>(Workload Identity)"| GSA
+    GSA -->|"3 has secretAccessor role<br/>on specific secret"| SM
+    SPC -->|"4 references<br/>resourceName"| SM
+    Driver -->|"5 mounts file<br/>into pod"| Pod

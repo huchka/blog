@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant K as kubelet
+    participant CSI as CSI Driver
+    participant SM as Secret Manager
+    participant Sync as Sync Controller
+    participant Pod as Container
+
+    K->>CSI: mount volume (blocks)
+    CSI->>SM: fetch secret
+    SM-->>CSI: secret value
+    CSI-->>K: mount ready<br/>(file at /mnt/secrets/...)
+    Note over K,CSI: Synchronous — always done before container starts
+
+    par
+        K->>Pod: start container
+        Note over Pod: Reads env var<br/>from K8s Secret
+    and
+        CSI-->>Sync: SPC pod status updated
+        Sync->>Sync: create/update<br/>K8s Secret
+    end
+
+    Note over Pod,Sync: ⚠️ Race: container may start BEFORE<br/>K8s Secret is synced
+    Pod-->>Pod: env var empty<br/>→ DB connection fails<br/>→ CrashLoopBackOff
