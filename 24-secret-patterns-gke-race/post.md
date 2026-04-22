@@ -206,9 +206,9 @@ If you're picking one:
 
 Or in one sentence: if you can touch app code, prefer file mounts (Pattern 3 or 4). If you can't, and the cold-start race is acceptable, use CSI + `secretObjects` (Pattern 2). `kubectl create secret` is fine for local dev and nothing else.
 
-## The Python helper I landed on
+## The Python helper I'm planning
 
-For FeedForge I ended up halfway between Patterns 2 and 3 — I'm still using `secretObjects` for now because it was the smallest delta during the migration, but I filed a follow-up issue to move to files. The helper I plan to use is pretty short:
+For FeedForge I'm currently on Pattern 2 — `secretObjects` was the smallest delta during the migration, so I shipped that first and filed a follow-up issue to move to file mounts. I haven't written the helper yet, but here's the sketch I'll start from when I do:
 
 ```python
 from __future__ import annotations
