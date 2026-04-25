@@ -1,0 +1,18 @@
+sequenceDiagram
+    autonumber
+    participant Runner as GitHub Actions Runner<br/>(ephemeral, ~5 min)
+    participant GitHub as GitHub OIDC Issuer<br/>token.actions.githubusercontent.com
+    participant STS as GCP Security Token Service<br/>sts.googleapis.com
+    participant IAM as GCP IAM Credentials<br/>iamcredentials.googleapis.com
+    participant API as GCP APIs<br/>(Artifact Registry, GKE)
+
+    Runner->>GitHub: Mint OIDC JWT for audience=<WIF provider>
+    GitHub-->>Runner: Signed JWT<br/>{repository, ref, sha, sub, exp ~5min}
+    Runner->>STS: Exchange JWT for federated token
+    STS->>GitHub: Fetch JWKS, verify signature
+    STS->>STS: Evaluate attribute_condition<br/>assertion.repository == "huchka/feedforge"
+    STS-->>Runner: Federated access token
+    Runner->>IAM: Impersonate service account<br/>(generateAccessToken)
+    IAM->>IAM: Check workloadIdentityUser binding<br/>on principalSet
+    IAM-->>Runner: GCP access token<br/>(SA identity, ~1 hour TTL)
+    Runner->>API: Push image / kubectl apply<br/>using SA access token
